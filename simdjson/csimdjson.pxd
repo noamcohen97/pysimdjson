@@ -109,6 +109,16 @@ cdef extern from "simdjson.h" namespace "simdjson::dom":
         double get_double() except +simdjson_error_handler
         bint get_bool() except +simdjson_error_handler
 
+    cdef cppclass simd_document_stream "simdjson::dom::document_stream":
+        cppclass iterator:
+            iterator()
+
+            iterator operator++()
+            bint operator!=(iterator)
+            simd_element operator*()
+
+        simd_document_stream.iterator begin()
+        simd_document_stream.iterator end()
 
     cdef cppclass simd_parser "simdjson::dom::parser":
         simd_parser() except +simdjson_error_handler
@@ -117,3 +127,4 @@ cdef extern from "simdjson.h" namespace "simdjson::dom":
         simd_element parse(const char *, size_t, bint) \
             except +simdjson_error_handler
         simd_element load(const char *) except +simdjson_error_handler
+        simd_document_stream load_many(const char *) except +simdjson_error_handler

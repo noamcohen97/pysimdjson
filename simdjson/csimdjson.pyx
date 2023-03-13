@@ -518,6 +518,35 @@ cdef class Parser:
         cdef simd_element document = dereference(self.c_parser).load(path)
         return element_to_primitive(self, document, recursive)
 
+    def load_many(self, path, bint recursive=False):
+        """Load a JSON document from the file system path `path`.
+
+        If any :class:`~Object` or :class:`~Array` proxies still pointing to
+        a previously-parsed document exist when this method is called, a
+        `RuntimeError` may be raised.
+
+        :param path: A filesystem path.
+        :param recursive: Recursively turn the document into real
+                          python objects instead of pysimdjson proxies.
+        """
+        if self.c_parser.use_count() > 1:
+            raise RuntimeError(
+                'Tried to re-use a parser while simdjson.Object and/or'
+                ' simdjson.Array objects still exist referencing the old'
+                ' parser.'
+            )
+
+        if isinstance(path, unicode):
+            path = (<unicode>path).encode('utf-8')
+        elif isinstance(path, pathlib.Path):
+            path = str(path).encode('utf-8')
+
+        count = 0
+        for document in dereference(self.c_parser).load_many(path):
+            count += 1
+            yield count
+            # yield element_to_primitive(self, document, recursive)
+
     def get_implementations(self, supported_by_runtime=True):
         """
         A list of available parser implementations in the form of [(name,
